@@ -1,0 +1,5 @@
+*~
+*pyc
+build
+dist
+prosa_parser.egg-info

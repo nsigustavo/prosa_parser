@@ -1,0 +1,20 @@
+>>> from prosa_parser.parser import LiteralSource
+>>> from prosa_parser.parser import LiteralSource, lexical_analysis
+>>> from pprint import pprint
+
+>>> source = LiteralSource('''
+... """um
+... dois."""
+... 3. quatro.''')
+
+
+>>> print source.slice([1, 0], [3, 2])
+"""um
+dois."""
+3.
+>>> print source.slice([3, 3], [3, 10])
+quatro.
+
+>>> source = LiteralSource('    123.')
+>>> print source.slice([0, 4], [0, 7])
+123

@@ -1,0 +1,179 @@
+
+Describe tokens to parser.
+=============================
+
+
+>>> from prosa_parser.parser import *
+
+
+Whitespace token.
+-------------------
+
+    >>> Whitespace.match('   teste.')
+    <class '...Whitespace'>
+    >>> token = Whitespace('   teste.', 0, 0)
+
+    >>> token.tokenize()
+    (WHITESPACE, '   ', [0, 0], [0, 3])
+    >>> token.rest_source()
+    'teste.'
+
+    >>> Whitespace.match('teste.')
+
+
+Word token.
+------------
+
+    >>> Word.match('teste.')
+    <class '...Word'>
+    >>> token = Word('teste.', 0, 0)
+    >>> token.tokenize()
+    (WORD, 'teste', [0, 0], [0, 5])
+    >>> token.rest_source()
+    '.'
+
+
+    >>> Word.match('Blá.')
+    <class '...Word'>
+    >>> token = Word('Blá.', 0, 0)
+    >>> print token.tokenize()[1]
+    Blá
+
+
+EndOfTheSentence token.
+-------------------------
+
+    >>> EndOfTheSentence.match('. ')
+    <class '...EndOfTheSentence'>
+    >>> token = EndOfTheSentence('. ', 0, 0)
+    >>> token.tokenize()
+    (ENDOFTHESENTENCE, '.', [0, 0], [0, 1])
+    >>> token.rest_source()
+    ' '
+
+
+MultiLineString token.
+-------------------------
+
+    >>> MultiLineString.match('""" teste """')
+    <class '...MultiLineString'>
+    >>> token = MultiLineString('""" teste """.', 0, 0)
+    >>> token.tokenize()
+    (MULTILINESTRING, '""" teste """', [0, 0], [0, 13])
+    >>> token.rest_source()
+    '.'
+
+
+SimpleString token.
+---------------------
+
+    >>> SimpleString.match('"teste"')
+    <class '...SimpleString'>
+    >>> token = SimpleString('"teste".', 0, 0)
+    >>> token.tokenize()
+    (SIMPLESTRING, '"teste"', [0, 0], [0, 7])
+    >>> token.rest_source()
+    '.'
+
+IndentDefinition token.
+--------------------------
+
+    >>> IndentDefinition.match(': teste')
+    <class '...IndentDefinition'>
+    >>> token = IndentDefinition(': teste', 0, 0)
+    >>> token.tokenize()
+    (INDENTDEFINITION, ':', [0, 0], [0, 1])
+    >>> token.rest_source()
+    ' teste'
+
+
+LineEnd token.
+----------------
+
+    >>> LineEnd.match('\nteste')
+    <class '...LineEnd'>
+    >>> token = LineEnd('\nteste', 0, 0)
+    >>> token.tokenize()
+    (LINEEND, '\n', [0, 0], [1, 0])
+    >>> token.rest_source()
+    'teste'
+
+
+Doctest token.
+----------------
+
+    >>> Doctest.match('>>> 1+1\n2')
+    <class '...Doctest'>
+    >>> token = Doctest('>>> 1+1\n2', 0, 0)
+    >>> token.tokenize()
+    (DOCTEST, '>>> 1+1\n2', [0, 0], [1, 9])
+    
+    >>> Doctest('    >>> 1+1\n    2', 0, 0).tokenize()
+    (DOCTEST, '    >>> 1+1\n    2', [0, 0], [1, 17])
+
+    >>> token = Doctest('>>> 1+1\n2\n>>> 2+2\n4\n', 0, 0)
+    >>> token.tokenize()
+    (DOCTEST, '>>> 1+1\n2\n', [0, 0], [2, 10])
+    >>> token.rest_source()
+    '>>> 2+2\n4\n'
+
+    >>> Doctest("""     >>> [
+    ...     'one',
+    ...     'two']
+    ...     ['one', 'two']
+    ...     >>> 1+1
+    ...     2 """,0,0).tokenize()
+    (DOCTEST, "     >>> [\n    'one',\n    'two']\n    ['one', 'two']\n", [0, 0], [4, 52])
+
+
+
+
+PointFloat token.
+-------------------
+
+    >>> PointFloat.match('11.22')
+    <class '...PointFloat'>
+    >>> token = PointFloat('0.1', 0, 0)
+    >>> token.tokenize()
+    (POINTFLOAT, '0.1', [0, 0], [0, 3])
+    >>> token.rest_source()
+    ''
+
+
+IntNumber token.
+------------------
+
+    >>> IntNumber.match('1111 teste')
+    <class '...IntNumber'>
+    >>> token = IntNumber('123 123', 0, 0)
+    >>> token.tokenize()
+    (INTNUMBER, '123', [0, 0], [0, 3])
+    >>> token.rest_source()
+    ' 123'
+
+
+Bracket token.
+---------------
+
+    >>> Bracket.match('["teste"]')
+    <class '...Bracket'>
+    >>> token = Bracket('["teste"]', 0, 0)
+    >>> token.tokenize()
+    (BRACKET, '[', [0, 0], [0, 1])
+    >>> token.rest_source()
+    '"teste"]'
+
+
+Variable token.
+----------------
+
+    >>> Variable.match('<teste>')
+    <class '...Variable'>
+    >>> token = Variable('<teste>', 0, 0)
+    >>> token.tokenize()
+    (VARIABLE, '<teste>', [0, 0], [0, 7])
+    >>> token.rest_source()
+    ''
+
+
+

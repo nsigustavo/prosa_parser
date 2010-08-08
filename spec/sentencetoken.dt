@@ -1,0 +1,24 @@
+>>> from prosa_parser.parser import SentenceToken
+>>> from ludibrio import Stub, Dummy
+
+>>> WORD = Dummy(repr="WORD")
+>>> ENDOFTHESENTENCE = Dummy(repr="ENDOFTHESENTENCE")
+>>> fake_tokens = [
+...     (WORD, 'teste', [0, 5], [0, 9]),
+...     (ENDOFTHESENTENCE, '.', [0, 10], [0, 11])]
+
+>>> with Stub() as source_slice:
+...     source_slice.slice([0, 5], [0, 11]) >> 'teste.'
+
+>>> sentence = SentenceToken(source_slice, fake_tokens)
+>>> sentence
+['teste', '.']
+
+>>> sentence[1]
+'.'
+
+>>> for word in sentence: print word,
+teste .
+
+>>> sentence.text
+'teste.'

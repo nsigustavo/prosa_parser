@@ -1,0 +1,198 @@
+
+Describe parser.
+==================
+
+
+>>> from prosa_parser.parser import lexical_analysis, parse, conf_parse
+>>> from pprint import pprint
+
+
+
+Lexical analysis
+------------------
+
+
+1. Lexical analysis of simple phrase::
+
+    >>> pprint(list(lexical_analysis('     Dado que eu tenha frases. ')))
+    [(WORD, 'Dado', [0, 5], [0, 9]),
+     (WORD, 'que', [0, 10], [0, 13]),
+     (WORD, 'eu', [0, 14], [0, 16]),
+     (WORD, 'tenha', [0, 17], [0, 22]),
+     (WORD, 'frases', [0, 23], [0, 29]),
+     (ENDOFTHESENTENCE, '.', [0, 29], [0, 30])]
+
+
+2. Lexical analysis of simple phrase contented string with '.'.::
+
+    >>> pprint(list(lexical_analysis("Dado que eu tenha uma 'string qualquer.'. ")))
+    [(WORD, 'Dado', [0, 0], [0, 4]),
+     (WORD, 'que', [0, 5], [0, 8]),
+     (WORD, 'eu', [0, 9], [0, 11]),
+     (WORD, 'tenha', [0, 12], [0, 17]),
+     (WORD, 'uma', [0, 18], [0, 21]),
+     (SIMPLESTRING, "'string qualquer.'", [0, 22], [0, 40]),
+     (ENDOFTHESENTENCE, '.', [0, 40], [0, 41])]
+
+
+3. Lexical analysis of multiline phrase::
+
+    >>> pprint(list(lexical_analysis("""
+    ...     um.
+    ...     2.
+    ... """)))
+    [(WORD, 'um', [1, 4], [1, 6]),
+     (ENDOFTHESENTENCE, '.', [1, 6], [1, 7]),
+     (INTNUMBER, '2', [2, 4], [2, 5]),
+     (ENDOFTHESENTENCE, '.', [2, 5], [2, 6])]
+
+
+4. Lexical analysis of multiline phrase with multiline single quoted string::
+
+    >>> pprint(list(lexical_analysis("""
+    ... '''um
+    ... dois.'''
+    ... 3. """)))
+    [(MULTILINESTRING, "'''um\ndois.'''", [1, 0], [2, 14]),
+     (INTNUMBER, '3', [3, 0], [3, 1]),
+     (ENDOFTHESENTENCE, '.', [3, 1], [3, 2])]
+
+
+4. Lexical analysis of multiline phrase with multiline doble quoted string::
+
+    >>> pprint(list(lexical_analysis('''
+    ... """um
+    ... dois."""
+    ... 3.4. ''')))
+    [(MULTILINESTRING, '"""um\ndois."""', [1, 0], [2, 14]),
+     (POINTFLOAT, '3.4', [3, 0], [3, 3]),
+     (ENDOFTHESENTENCE, '.', [3, 3], [3, 4])]
+
+
+5. Lexical analysis of multiline phrase with multiline single quoted string::
+
+    >>> pprint(list(lexical_analysis('www.teste.com.')))
+    [(WORD, 'www.teste.com', [0, 0], [0, 13]),
+     (ENDOFTHESENTENCE, '.', [0, 13], [0, 14])]
+
+
+5. Lexical analysis of indent block::
+
+    >>> pprint(list(lexical_analysis("""
+    ... Feature:
+    ...     Idented.""")))
+    [(WORD, 'Feature', [1, 0], [1, 7]),
+     (INDENTDEFINITION, ':', [1, 7], [1, 8]),
+     (WORD, 'Idented', [2, 4], [2, 11]),
+     (ENDOFTHESENTENCE, '.', [2, 11], [2, 12])]
+
+
+5. Lexical analysis of indent block with doctest::
+
+    >>> pprint(list(lexical_analysis("""
+    ... Feature:
+    ...     >>> 1+1
+    ...     3
+    ... """)))
+    [(WORD, 'Feature', [1, 0], [1, 7]),
+     (INDENTDEFINITION, ':', [1, 7], [1, 8]),
+     (DOCTEST, '    >>> 1+1\n    3\n', [2, 0], [4, 18])]
+
+
+
+Syntactic analysis
+--------------------
+
+
+1. Parser simple phrase:
+
+    >>> parse("Dado que eu tenha uma 'string qualquer.'. ")
+    [['Dado', 'que', 'eu', 'tenha', 'uma', "'string qualquer.'", '.']]
+
+
+2. Parser with two sentences.
+    >>> parse('''
+    ... """um
+    ... dois.""".
+    ... 3. ''')
+    [['"""um\ndois."""', '.'], ['3', '.']]
+
+
+3. Parser simple indented block:
+
+    >>> parse("""
+    ... Feature:
+    ...     Indented.""")
+    [['Feature', ':'], [['Indented', '.']]]
+
+
+3. Parser simple indented block with more senteces::
+
+    >>> parse("""
+    ... Example:
+    ...     teste.
+    ...     Ident.""")
+    [['Example', ':'], [['teste', '.'], ['Ident', '.']]]
+
+
+4. Parser complex text::
+
+    >>> feature = parse("""
+    ... Feature: Manipulate strings.
+    ...   In order to have some fun.
+    ...   As a programming beginner.
+    ...   I want to manipulate strings.
+    ... 
+    ...   Scenario: Uppercased strings.
+    ...     Given i have the string "prosa leaves".
+    ...     When i put it in upper case.
+    ...     Then i see the string is "PROSA LEAVES".
+    ... """)
+
+    4.1 Showing various levels of indentation.
+
+        >>> pprint(feature)
+        [['Feature', ':'],
+         [['Manipulate', 'strings', '.'],
+          ['In', 'order', 'to', 'have', 'some', 'fun', '.'],
+          ['As', 'a', 'programming', 'beginner', '.'],
+          ['I', 'want', 'to', 'manipulate', 'strings', '.'],
+          ['Scenario', ':'],
+          [['Uppercased', 'strings', '.'],
+           ['Given', 'i', 'have', 'the', 'string', '"prosa leaves"', '.'],
+           ['When', 'i', 'put', 'it', 'in', 'upper', 'case', '.'],
+           ['Then', 'i', 'see', 'the', 'string', 'is', '"PROSA LEAVES"', '.']]]]
+
+    4.2 Retrieving the phrases::
+
+        >>> def showtext(feature):
+        ...     for sentence in feature:
+        ...         if not isinstance(sentence, list):
+        ...             print sentence.text
+        ...         else:
+        ...             showtext(sentence)
+        >>> showtext(feature)
+        Feature:
+        Manipulate strings.
+        In order to have some fun.
+        As a programming beginner.
+        I want to manipulate strings.
+        Scenario:
+        Uppercased strings.
+        Given i have the string "prosa leaves".
+        When i put it in upper case.
+        Then i see the string is "PROSA LEAVES".
+
+
+
+Describe conf_parse
+---------------------
+
+
+1. Parser simple phrase:
+
+`    >>> conf_parse("Dado que eu tenha uma 'string qualquer.'. ")
+    ['Dado', 'que', 'eu', 'tenha', 'uma', "'string qualquer.'", '.']
+
+
+
