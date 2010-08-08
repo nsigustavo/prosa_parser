@@ -1,5 +1,5 @@
-parse for writing specifications using plan text
-================================================
+parse to write specifications using plan text
+=============================================
 
 ::
 
